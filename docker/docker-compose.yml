@@ -1,0 +1,64 @@
+services:
+  openrelik-server:
+    container_name: openrelik-server
+    image: ghcr.io/openrelik/openrelik-server:${OPENRELIK_SERVER_VERSION}
+    restart: always
+    environment:
+      - SQLALCHEMY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@openrelik-postgres/${POSTGRES_DB}
+      - REDIS_URL=redis://openrelik-redis:6379
+      - OPENRELIK_SERVER_SETTINGS=/etc/openrelik/settings.toml
+    volumes:
+      - ./data:/usr/share/openrelik/data
+      - ./config:/etc/openrelik/
+    ports:
+      - 8000:8000
+    command: uvicorn main:app --proxy-headers --forwarded-allow-ips '*' --workers 1 --host 0.0.0.0 --port 8000
+
+  openrelik-ui:
+    container_name: openrelik-ui
+    image: ghcr.io/openrelik/openrelik-ui:${OPENRELIK_UI_VERSION}
+    restart: always
+    environment:
+      - OPENRELIK_SERVER_URL=${OPENRELIK_SERVER_URL}
+      - OPENRELIK_API_VERSION=${OPENRELIK_API_VERSION}
+    ports:
+      - 80:80
+
+  # The mediator server is responsible for orchestrating updates between task workers and the backend datastore.
+  # It uses the mediator/monitor.py script to monitor Celery tasks and update the database accordingly.
+  # It connects to the PostgreSQL database and Redis queue using environment variables.
+  openrelik-mediator:
+    container_name: openrelik-mediator
+    image: ghcr.io/openrelik/openrelik-mediator:latest
+    restart: always
+    environment:
+      - SQLALCHEMY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@openrelik-postgres/${POSTGRES_DB}
+      - REDIS_URL=redis://openrelik-redis:6379
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/usr/share/openrelik/data
+      - ./config:/etc/openrelik
+    command: "python mediator.py"
+
+  # PostgreSQL database for storing application data.
+  openrelik-postgres:
+    container_name: openrelik-postgres
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    restart: always
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+    ports:
+      - 127.0.0.1:5432:5432
+
+  # Redis queue for task management.
+  openrelik-redis:
+    container_name: openrelik-redis
+    image: redis:7
+    restart: always
+    ports:
+      - 127.0.0.1:6379:6379
+    command: "redis-server"
