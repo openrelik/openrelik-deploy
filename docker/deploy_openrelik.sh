@@ -26,8 +26,10 @@ mkdir -p ./openrelik/{data/postgresql,data/artifacts,config}
 # Set the working directory
 cd ./openrelik
 
-# TODO add curl get config.env, docker-compose.yml and settings_example.toml
-
+# Fetch installation files
+curl -s https://raw.githubusercontent.com/openrelik/openrelik-deploy/main/docker/config.env > config.env
+curl -s https://raw.githubusercontent.com/openrelik/openrelik-deploy/main/docker/docker-compose.yml > docker-compose.yml
+curl -s https://raw.githubusercontent.com/openrelik/openrelik-server/main/settings_example.toml > settings.toml
 
 STORAGE_PATH="\/usr\/share\/openrelik\/data\/artifacts"
 POSTGRES_USER="openrelik"
@@ -38,23 +40,21 @@ RANDOM_SESSION_STRING="$(generate_random_string)"
 RANDOM_JWT_STRING="$(generate_random_string)"
 
 # Portable use of sed (BSD sed expects an argument after the -i flag, even if it's just an empty string.)
-sed "s/<REPLACE_WITH_STORAGE_PATH>/${STORAGE_PATH}/g" settings_example.toml > settings.toml.tmp && mv settings.toml.tmp settings.toml
+sed "s/<REPLACE_WITH_STORAGE_PATH>/${STORAGE_PATH}/g" settings.toml > settings.toml.tmp && mv settings.toml.tmp settings.toml
 sed "s/<REPLACE_WITH_POSTGRES_USER>/${POSTGRES_USER}/g" settings.toml > settings.toml.tmp && mv settings.toml.tmp settings.toml
 sed "s/<REPLACE_WITH_POSTGRES_PASSWORD>/${POSTGRES_PASSWORD}/g" settings.toml > settings.toml.tmp && mv settings.toml.tmp settings.toml
 sed "s/<REPLACE_WITH_POSTGRES_SERVER>/${POSTGRES_SERVER}/g" settings.toml > settings.toml.tmp && mv settings.toml.tmp settings.toml
 sed "s/<REPLACE_WITH_POSTGRES_DATABASE_NAME>/${POSTGRES_DATABASE_NAME}/g" settings.toml > settings.toml.tmp && mv settings.toml.tmp settings.toml
 sed "s/<REPLACE_WITH_RANDOM_SESSION_STRING>/${RANDOM_SESSION_STRING}/g" settings.toml > settings.toml.tmp && mv settings.toml.tmp settings.toml
 sed "s/<REPLACE_WITH_RANDOM_JWT_STRING>/${RANDOM_JWT_STRING}/g" settings.toml > settings.toml.tmp && mv settings.toml.tmp settings.toml
-rm settings_example.toml
 
 # Move settings to the mapped folder.
 mv settings.toml ./config/
 
 # Replace variables in config.env (for docker compose)
-sed "s/<REPLACE_WITH_POSTGRES_USER>/${POSTGRES_USER}/g" config_example.env > config.env.tmp && mv config.env.tmp config.env
+sed "s/<REPLACE_WITH_POSTGRES_USER>/${POSTGRES_USER}/g" config.env > config.env.tmp && mv config.env.tmp config.env
 sed "s/<REPLACE_WITH_POSTGRES_PASSWORD>/${POSTGRES_PASSWORD}/g" config.env > config.env.tmp && mv config.env.tmp config.env
 sed "s/<REPLACE_WITH_POSTGRES_DATABASE_NAME>/${POSTGRES_DATABASE_NAME}/g" config.env > config.env.tmp && mv config.env.tmp config.env
-rm config_example.env
 
 # Symlink the docker compose config
 ln -s config.env .env
