@@ -35,6 +35,7 @@ services:
       - SQLALCHEMY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@openrelik-postgres/${POSTGRES_DB}
       - REDIS_URL=redis://openrelik-redis:6379
       - PYTHONUNBUFFERED=1
+      - OPENRELIK_SERVER_SETTINGS=/etc/openrelik/settings.toml
     volumes:
       - ./data:/usr/share/openrelik/data
       - ./config:/etc/openrelik
