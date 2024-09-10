@@ -41,6 +41,17 @@ services:
       - ./config:/etc/openrelik
     command: "python mediator.py"
 
+  # Worker containers
+  openrelik-worker-strings:
+    container_name: openrelik-worker-strings
+    image: ghcr.io/openrelik/openrelik-worker-strings:latest
+    restart: always
+    environment:
+      - REDIS_URL=redis://openrelik-redis:6379
+    volumes:
+      - ./data:/usr/share/openrelik/data
+    command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-strings"
+
   # PostgreSQL database for storing application data.
   openrelik-postgres:
     container_name: openrelik-postgres
