@@ -11,8 +11,8 @@ services:
       - ./data:/usr/share/openrelik/data
       - ./config:/etc/openrelik/
     ports:
-      - 8000:8000
-    command: uvicorn main:app --proxy-headers --forwarded-allow-ips '*' --workers 1 --host 0.0.0.0 --port 8000
+      - 127.0.0.1:8710:8710
+    command: uvicorn main:app --proxy-headers --forwarded-allow-ips '*' --workers 1 --host 0.0.0.0 --port 8710
 
   openrelik-ui:
     container_name: openrelik-ui
@@ -22,7 +22,7 @@ services:
       - OPENRELIK_SERVER_URL=${OPENRELIK_SERVER_URL}
       - OPENRELIK_API_VERSION=${OPENRELIK_API_VERSION}
     ports:
-      - 80:80
+      - 127.0.0.1:8711:80
 
   # The mediator server is responsible for orchestrating updates between task workers and the backend datastore.
   # It uses the mediator/monitor.py script to monitor Celery tasks and update the database accordingly.
