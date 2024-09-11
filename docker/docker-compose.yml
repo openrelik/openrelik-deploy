@@ -22,7 +22,7 @@ services:
       - OPENRELIK_SERVER_URL=${OPENRELIK_SERVER_URL}
       - OPENRELIK_API_VERSION=${OPENRELIK_API_VERSION}
     ports:
-      - 127.0.0.1:8711:80
+      - 127.0.0.1:8711:8711
 
   # The mediator server is responsible for orchestrating updates between task workers and the backend datastore.
   # It uses the mediator/monitor.py script to monitor Celery tasks and update the database accordingly.
@@ -63,14 +63,10 @@ services:
     restart: always
     volumes:
       - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
-    ports:
-      - 127.0.0.1:5432:5432
 
   # Redis queue for task management.
   openrelik-redis:
     container_name: openrelik-redis
     image: redis:7
     restart: always
-    ports:
-      - 127.0.0.1:6379:6379
     command: "redis-server"

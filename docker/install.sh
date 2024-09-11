@@ -113,6 +113,6 @@ echo -e "\n\033[1;32mInstallation Complete! 🎉\033[0m
 1. \033[1;34mSetup authentication:\033[0m
    * Instructions: https://openrelik.org/docs/getting-started/
    * Update \033[1mconfig/settings.toml\033[0m with your \033[1mclient_id\033[0m and \033[1mclient_secret\033[0m
-   * Grant access to your gmail account by adding <USERNAME>@gmail.com to \033[1mallow_list in \033[1mconfig/settings.toml
+   * Grant access to your gmail account by adding <USERNAME>@gmail.com to \033[1mallow_list in \033[1mconfig/settings.toml\n
 2. \033[1;34mLaunch Containers:\033[0m docker compose up -d\n
 3. \033[1;34mAccess OpenRelik at:\033[0m http://localhost:8711/\n"
