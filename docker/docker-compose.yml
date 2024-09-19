@@ -29,7 +29,7 @@ services:
   # It connects to the PostgreSQL database and Redis queue using environment variables.
   openrelik-mediator:
     container_name: openrelik-mediator
-    image: ghcr.io/openrelik/openrelik-mediator:latest
+    image: ghcr.io/openrelik/openrelik-mediator:${OPENRELIK_MEDIATOR_VERSION}
     restart: always
     environment:
       - SQLALCHEMY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@openrelik-postgres/${POSTGRES_DB}
