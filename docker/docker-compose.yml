@@ -52,6 +52,16 @@ services:
       - ./data:/usr/share/openrelik/data
     command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-strings"
 
+  openrelik-worker-plaso:
+    container_name: openrelik-worker-plaso
+    image: ghcr.io/openrelik/openrelik-worker-plaso:latest
+    restart: always
+    environment:
+      - REDIS_URL=redis://openrelik-redis:6379
+    volumes:
+      - ./data:/usr/share/openrelik/data
+    command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-plaso"
+
   # PostgreSQL database for storing application data.
   openrelik-postgres:
     container_name: openrelik-postgres

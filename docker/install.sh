@@ -66,12 +66,12 @@ POSTGRES_SERVER="openrelik-postgres"
 POSTGRES_DATABASE_NAME="openrelik"
 RANDOM_SESSION_STRING="$(generate_random_string)"
 RANDOM_JWT_STRING="$(generate_random_string)"
-echo -e " ✅"
+echo -e "\t\t✅"
 
 # Create dirs
 echo -e "\033[1;34m[2/4] Creating necessary directories...\033[0m\c"
 mkdir -p ./openrelik/{data/postgresql,data/artifacts,config}
-echo -e " ✅"
+echo -e "\t\t✅"
 
 # Set the current working directory
 cd ./openrelik
@@ -81,7 +81,7 @@ echo -e "\033[1;34m[3/4] Downloading configuration files...\033[0m\c"
 curl -s ${BASE_DEPLOY_URL}/config.env > config.env
 curl -s ${BASE_DEPLOY_URL}/docker-compose.yml > docker-compose.yml
 curl -s ${BASE_SERVER_URL}/settings_example.toml > settings.toml
-echo -e " ✅"
+echo -e "\t\t✅"
 
 # Replace placeholder values in settings.toml
 echo -e "\033[1;34m[4/4] Configuring settings...\033[0m\c"
@@ -103,7 +103,7 @@ replace_in_file "<REPLACE_WITH_POSTGRES_DATABASE_NAME>" "${POSTGRES_DATABASE_NAM
 
 # Symlink the docker compose config
 ln -s config.env .env
-echo -e " ✅"
+echo -e "\t\t✅"
 
 # We are done
 echo -e "\n\033[1;32mInstallation Complete! 🎉\033[0m
