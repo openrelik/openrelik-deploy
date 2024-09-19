@@ -44,7 +44,7 @@ services:
   # Worker containers
   openrelik-worker-strings:
     container_name: openrelik-worker-strings
-    image: ghcr.io/openrelik/openrelik-worker-strings:latest
+    image: ghcr.io/openrelik/openrelik-worker-strings:${OPENRELIK_WORKER_STRINGS_VERSION}
     restart: always
     environment:
       - REDIS_URL=redis://openrelik-redis:6379
@@ -54,7 +54,7 @@ services:
 
   openrelik-worker-plaso:
     container_name: openrelik-worker-plaso
-    image: ghcr.io/openrelik/openrelik-worker-plaso:latest
+    image: ghcr.io/openrelik/openrelik-worker-plaso:${OPENRELIK_WORKER_PLASO_VERSION}
     restart: always
     environment:
       - REDIS_URL=redis://openrelik-redis:6379
