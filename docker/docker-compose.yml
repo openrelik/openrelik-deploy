@@ -1,4 +1,5 @@
 services:
+  # -- Core services -----------------------------------------------------------------------
   openrelik-server:
     container_name: openrelik-server
     image: ghcr.io/openrelik/openrelik-server:${OPENRELIK_SERVER_VERSION}
@@ -41,7 +42,26 @@ services:
       - ./config:/etc/openrelik
     command: "python mediator.py"
 
-  # Worker containers
+  # PostgreSQL database for storing application data.
+  openrelik-postgres:
+    container_name: openrelik-postgres
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    restart: always
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+
+  # Redis queue for task management.
+  openrelik-redis:
+    container_name: openrelik-redis
+    image: redis:7
+    restart: always
+    command: "redis-server"
+
+  # -- Worker containers -----------------------------------------------------------------------
   openrelik-worker-strings:
     container_name: openrelik-worker-strings
     image: ghcr.io/openrelik/openrelik-worker-strings:${OPENRELIK_WORKER_STRINGS_VERSION}
@@ -62,21 +82,8 @@ services:
       - ./data:/usr/share/openrelik/data
     command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-plaso"
 
-  # PostgreSQL database for storing application data.
-  openrelik-postgres:
-    container_name: openrelik-postgres
-    image: postgres:16
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    restart: always
-    volumes:
-      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+  # Timesketch worker
+  # See https://github.com/openrelik/openrelik-worker-timesketch for installation instructions.
 
-  # Redis queue for task management.
-  openrelik-redis:
-    container_name: openrelik-redis
-    image: redis:7
-    restart: always
-    command: "redis-server"
+  # Hayabusa worker
+  # See https://github.com/openrelik/openrelik-worker-hayabusa for installation instructions.
