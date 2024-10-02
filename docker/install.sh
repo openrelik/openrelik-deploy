@@ -127,8 +127,8 @@ echo -e "\r\033[1;32m[5/5] Starting containers... Done\033[0m"
 
 # Wait for the server container to be ready
 echo -e "\033[1;34mWaiting for openrelik-server to be ready...\033[0m"
-timeout=60
-retry_interval=5
+timeout=120
+retry_interval=10
 start_time=$(date +%s)
 while true; do
   curl -s -o /dev/null "http://localhost:8710"
@@ -148,11 +148,12 @@ done
 echo -e "\r\033[1;32m[5/5] Waiting for openrelik-server to be ready... Done\033[0m"
 
 # Creating the admin user
-
+password=$(LC_ALL=C tr -dc A-Za-z0-9 < /dev/urandom | head -c 12)
+docker compose exec openrelik-server python admin.py create-user admin --password $password
 
 # We are done
 echo -e "\n\033[1;33mInstallation Complete! 🎉\033[0m
 
 \033[1;34mLogin:\033[0m http://localhost:8711/
 \033[1;34mUsername:\033[0m admin
-\033[1;34mPassword:\033[0m password\n"
+\033[1;34mPassword:\033[0m $password\n"
