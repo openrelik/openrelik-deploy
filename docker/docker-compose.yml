@@ -22,8 +22,7 @@ services:
     environment:
       - OPENRELIK_SERVER_URL=${OPENRELIK_SERVER_URL}
       - OPENRELIK_API_VERSION=${OPENRELIK_API_VERSION}
-      # Comma separated string of auth methods (e.g. "local,google")
-      - OPENRELIK_AUTH_METHODS="local"
+      - OPENRELIK_AUTH_METHODS=local  # Comma separated string of auth methods (e.g. local,google)
     ports:
       - 127.0.0.1:8711:8711
 
