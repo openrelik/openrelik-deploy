@@ -27,9 +27,24 @@ cat << "EOF"
 
 EOF
 
-# Exit early if there already is a 'openrelik' directory
+# Exit early if there already is an 'openrelik' directory
 if [ -d "openrelik" ]; then
-  echo -e "\033[1;31m ⚠️  Error: Directory 'openrelik' already exists. Exiting.\033[0m\n"
+  echo -e "\033[1;31m ⚠️  Error: Directory 'openrelik' already exists.\033[0m\n"
+  exit 1
+fi
+
+# Check if Docker is installed
+if ! command -v docker &> /dev/null; then
+  echo -e "\033[1;31m ⚠️  Error: Docker is not installed. Please install Docker before running this script.\033[0m"
+  echo -e "     Follow \033[1mhttps://docs.docker.com/engine/install/\033[0m to install Docker Engine for your platform.\n"
+  exit 1
+fi
+
+# Check if any Docker containers with "openrelik" in their name are running
+running_containers=$(docker ps --format "{{.Names}}")
+if grep -q "openrelik" <<< "$running_containers"; then
+  echo -e "\n\033[1;31m ⚠️  Error: Containers with 'openrelik' in their name are already running.\033[0m"
+  echo -e "\033[1;31m     Please stop these containers before proceeding.\033[0m\n"
   exit 1
 fi
 
@@ -56,7 +71,7 @@ replace_in_file() {
 }
 
 # Setup variables
-echo -e "\033[1;34m[1/4] Setting up variables...\033[0m\c"
+echo -e "\033[1;34m[1/5] Setting up variables...\033[0m\c"
 BASE_DEPLOY_URL="https://raw.githubusercontent.com/openrelik/openrelik-deploy/main/docker"
 BASE_SERVER_URL="https://raw.githubusercontent.com/openrelik/openrelik-server/main"
 STORAGE_PATH="\/usr\/share\/openrelik\/data\/artifacts"
@@ -66,22 +81,22 @@ POSTGRES_SERVER="openrelik-postgres"
 POSTGRES_DATABASE_NAME="openrelik"
 RANDOM_SESSION_STRING="$(generate_random_string)"
 RANDOM_JWT_STRING="$(generate_random_string)"
-echo -e "\r\033[1;32m[1/4] Setting up variables... Done\033[0m"
+echo -e "\r\033[1;32m[1/5] Setting up variables... Done\033[0m"
 
 # Create dirs
-echo -e "\033[1;34m[2/4] Creating necessary directories...\033[0m\c"
+echo -e "\033[1;34m[2/5] Creating necessary directories...\033[0m\c"
 mkdir -p ./openrelik/{data/postgresql,data/artifacts,config}
-echo -e "\r\033[1;32m[2/4] Creating necessary directories... Done\033[0m"
+echo -e "\r\033[1;32m[2/5] Creating necessary directories... Done\033[0m"
 
 # Set the current working directory
 cd ./openrelik
 
 # Fetch installation files
-echo -e "\033[1;34m[3/4] Downloading configuration files...\033[0m\c"
+echo -e "\033[1;34m[3/5] Downloading configuration files...\033[0m\c"
 curl -s ${BASE_DEPLOY_URL}/config.env > config.env
 curl -s ${BASE_DEPLOY_URL}/docker-compose.yml > docker-compose.yml
 curl -s ${BASE_SERVER_URL}/settings_example.toml > settings.toml
-echo -e "\r\033[1;32m[3/4] Downloading configuration files... Done\033[0m"
+echo -e "\r\033[1;32m[3/5] Downloading configuration files... Done\033[0m"
 
 # Replace placeholder values in settings.toml
 echo -e "\033[1;34m[4/4] Configuring settings...\033[0m\c"
@@ -103,17 +118,41 @@ replace_in_file "<REPLACE_WITH_POSTGRES_DATABASE_NAME>" "${POSTGRES_DATABASE_NAM
 
 # Symlink the docker compose config
 ln -s config.env .env
+echo -e "\r\033[1;32m[4/5] Configuring settings... Done\033[0m"
 
-echo -e "\r\033[1;32m[4/4] Configuring settings... Done\033[0m"
+# Starting containers
+echo -e "\033[1;34m[5/5] Starting containers...\033[0m"
+docker compose up -d --remove-orphans
+echo -e "\r\033[1;32m[5/5] Starting containers... Done\033[0m"
+
+# Wait for the server container to be ready
+echo -e "\033[1;34mWaiting for openrelik-server to be ready...\033[0m"
+timeout=60
+retry_interval=5
+start_time=$(date +%s)
+while true; do
+  curl -s -o /dev/null "http://localhost:8710"
+  # Exit and continue if curl returns 0 (success)
+  if [[ $? -eq 0 ]]; then
+    break
+  fi
+
+  elapsed_time=$(($(date +%s) - $start_time))
+  if [[ $elapsed_time -ge $timeout ]]; then
+    echo -e "\033[1;31m  ✗ Timeout waiting for openrelik-server to be ready.\033[0m"
+    exit 1
+  fi
+  echo -e "\033[1;33m  ⏳ Waiting for openrelik-server... ($elapsed_time seconds)\033[0m"
+  sleep $retry_interval
+done
+echo -e "\r\033[1;32m[5/5] Waiting for openrelik-server to be ready... Done\033[0m"
+
+# Creating the admin user
+
 
 # We are done
 echo -e "\n\033[1;33mInstallation Complete! 🎉\033[0m
 
-\033[1mNext Steps:\033[0m
-
-1. \033[1;34mSetup authentication:\033[0m
-   * Instructions: https://openrelik.org/docs/getting-started/
-   * Update \033[1mconfig/settings.toml\033[0m with your \033[1mclient_id\033[0m and \033[1mclient_secret\033[0m
-   * Grant access to your gmail account by adding <USERNAME>@gmail.com to \033[1mallow_list in \033[1mconfig/settings.toml\n
-2. \033[1;34mLaunch Containers:\033[0m docker compose up -d\n
-3. \033[1;34mAccess OpenRelik at:\033[0m http://localhost:8711/\n"
+\033[1;34mLogin:\033[0m http://localhost:8711/
+\033[1;34mUsername:\033[0m admin
+\033[1;34mPassword:\033[0m password\n"
