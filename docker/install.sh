@@ -128,7 +128,7 @@ echo -e "\r\033[1;32m[5/5] Starting containers... Done\033[0m"
 # Wait for the server container to be ready
 echo -e "\033[1;34mWaiting for openrelik-server to be ready...\033[0m"
 timeout=120
-retry_interval=10
+retry_interval=5
 start_time=$(date +%s)
 while true; do
   curl -s -o /dev/null "http://localhost:8710"
