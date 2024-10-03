@@ -122,7 +122,7 @@ echo -e "\r\033[1;32m[4/5] Configuring settings... Done\033[0m"
 
 # Starting containers
 echo -e "\033[1;34m[5/5] Starting containers...\033[0m"
-docker compose up -d --remove-orphans
+docker compose up -d --wait --quiet-pull
 echo -e "\r\033[1;32m[5/5] Starting containers... Done\033[0m"
 
 # Wait for the server container to be ready
@@ -148,8 +148,8 @@ done
 echo -e "\r\033[1;32m[5/5] Waiting for openrelik-server to be ready... Done\033[0m"
 
 # Creating the admin user
-password=$(LC_ALL=C tr -dc A-Za-z0-9 < /dev/urandom | head -c 12)
-docker compose exec openrelik-server python admin.py create-user admin --password $password
+password=$(LC_ALL=C tr -dc 'A-Za-z0-9@%*+,-./' < /dev/urandom | head -c 16)
+docker compose exec openrelik-server python admin.py create-user admin --password $password --admin
 
 # We are done
 echo -e "\n\033[1;33mInstallation Complete! 🎉\033[0m
