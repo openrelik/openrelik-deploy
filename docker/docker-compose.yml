@@ -69,6 +69,8 @@ services:
     restart: always
     environment:
       - REDIS_URL=redis://openrelik-redis:6379
+      - OPENRELIK_PYDEBUG=0
+      - OPENRELIK_PYDEBUG_PORT=5678
     volumes:
       - ./data:/usr/share/openrelik/data
     command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-strings"
@@ -79,6 +81,8 @@ services:
     restart: always
     environment:
       - REDIS_URL=redis://openrelik-redis:6379
+      - OPENRELIK_PYDEBUG=0
+      - OPENRELIK_PYDEBUG_PORT=5678
     volumes:
       - ./data:/usr/share/openrelik/data
     command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-plaso"
