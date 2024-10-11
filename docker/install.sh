@@ -122,7 +122,7 @@ echo -e "\r\033[1;32m[4/5] Configuring settings... Done\033[0m"
 
 # Starting containers
 echo -e "\033[1;34m[5/5] Starting containers...\033[0m"
-docker compose up -d --wait --quiet-pull
+docker compose up -d --wait --quiet-pull --remove-orphans
 echo -e "\r\033[1;32m[5/5] Starting containers... Done\033[0m"
 
 # Wait for the server container to be ready
