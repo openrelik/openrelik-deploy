@@ -87,16 +87,16 @@ services:
       - ./data:/usr/share/openrelik/data
     command: "celery --app=src.app worker --task-events --concurrency=2 --loglevel=INFO -Q openrelik-worker-plaso"
 
-  openrelik-worker-artifact-extraction:
-      container_name: openrelik-worker-artifact-extraction
-      image: ghcr.io/openrelik/openrelik-worker-artifact-extraction:${OPENRELIK_WORKER_ARTIFACT_EXTRACTION_VERSION}
+  openrelik-worker-extraction:
+      container_name: openrelik-worker-extraction
+      image: ghcr.io/openrelik/openrelik-worker-extraction:${OPENRELIK_WORKER_EXTRACTION_VERSION}
       restart: always
       environment:
         - REDIS_URL=redis://openrelik-redis:6379
         - OPENRELIK_PYDEBUG=0
       volumes:
         - ./data:/usr/share/openrelik/data
-      command: "celery --app=src.app worker --task-events --concurrency=2 --loglevel=INFO -Q openrelik-worker-artifact-extraction"
+      command: "celery --app=src.app worker --task-events --concurrency=2 --loglevel=INFO -Q openrelik-worker-extraction"
 
   # Timesketch worker
   # See https://github.com/openrelik/openrelik-worker-timesketch for installation instructions.
