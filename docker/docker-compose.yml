@@ -98,8 +98,15 @@ services:
         - ./data:/usr/share/openrelik/data
       command: "celery --app=src.app worker --task-events --concurrency=2 --loglevel=INFO -Q openrelik-worker-extraction"
 
-  # Timesketch worker
-  # See https://github.com/openrelik/openrelik-worker-timesketch for installation instructions.
+  openrelik-worker-hayabusa:
+      container_name: openrelik-worker-hayabusa
+      image: ghcr.io/openrelik/openrelik-worker-hayabusa:${OPENRELIK_WORKER_HAYABUSA_VERSION}
+      restart: always
+      environment:
+        - REDIS_URL=redis://openrelik-redis:6379
+      volumes:
+        - ./data:/usr/share/openrelik/data
+      command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-hayabusa"
 
-  # Hayabusa worker
-  # See https://github.com/openrelik/openrelik-worker-hayabusa for installation instructions.
+  # Timesketch worker - This worker needs access to an existing Timesketch server.
+  # See https://github.com/openrelik/openrelik-worker-timesketch for installation instructions.
