@@ -71,7 +71,7 @@ replace_in_file() {
 }
 
 # Setup variables
-echo -e "\033[1;34m[1/5] Setting up variables...\033[0m\c"
+echo -e "\033[1;34m[1/8] Setting up variables...\033[0m\c"
 BASE_DEPLOY_URL="https://raw.githubusercontent.com/openrelik/openrelik-deploy/main/docker"
 BASE_SERVER_URL="https://raw.githubusercontent.com/openrelik/openrelik-server/main"
 STORAGE_PATH="\/usr\/share\/openrelik\/data\/artifacts"
@@ -81,25 +81,25 @@ POSTGRES_SERVER="openrelik-postgres"
 POSTGRES_DATABASE_NAME="openrelik"
 RANDOM_SESSION_STRING="$(generate_random_string)"
 RANDOM_JWT_STRING="$(generate_random_string)"
-echo -e "\r\033[1;32m[1/5] Setting up variables... Done\033[0m"
+echo -e "\r\033[1;32m[1/8] Setting up variables... Done\033[0m"
 
 # Create dirs
-echo -e "\033[1;34m[2/5] Creating necessary directories...\033[0m\c"
+echo -e "\033[1;34m[2/8] Creating necessary directories...\033[0m\c"
 mkdir -p ./openrelik/{data/postgresql,data/artifacts,config}
-echo -e "\r\033[1;32m[2/5] Creating necessary directories... Done\033[0m"
+echo -e "\r\033[1;32m[2/8] Creating necessary directories... Done\033[0m"
 
 # Set the current working directory
 cd ./openrelik
 
 # Fetch installation files
-echo -e "\033[1;34m[3/5] Downloading configuration files...\033[0m\c"
+echo -e "\033[1;34m[3/8] Downloading configuration files...\033[0m\c"
 curl -s ${BASE_DEPLOY_URL}/config.env > config.env
 curl -s ${BASE_DEPLOY_URL}/docker-compose.yml > docker-compose.yml
 curl -s ${BASE_SERVER_URL}/settings_example.toml > settings.toml
-echo -e "\r\033[1;32m[3/5] Downloading configuration files... Done\033[0m"
+echo -e "\r\033[1;32m[3/8] Downloading configuration files... Done\033[0m"
 
 # Replace placeholder values in settings.toml
-echo -e "\033[1;34m[4/4] Configuring settings...\033[0m\c"
+echo -e "\033[1;34m[4/8] Configuring settings...\033[0m\c"
 replace_in_file "<REPLACE_WITH_STORAGE_PATH>" "${STORAGE_PATH}" "settings.toml"
 replace_in_file "<REPLACE_WITH_POSTGRES_USER>" "${POSTGRES_USER}" "settings.toml"
 replace_in_file "<REPLACE_WITH_POSTGRES_PASSWORD>" "${POSTGRES_PASSWORD}" "settings.toml"
@@ -118,15 +118,15 @@ replace_in_file "<REPLACE_WITH_POSTGRES_DATABASE_NAME>" "${POSTGRES_DATABASE_NAM
 
 # Symlink the docker compose config
 ln -s config.env .env
-echo -e "\r\033[1;32m[4/5] Configuring settings... Done\033[0m"
+echo -e "\r\033[1;32m[4/8] Configuring settings... Done\033[0m"
 
 # Starting containers
-echo -e "\033[1;34m[5/5] Starting containers...\033[0m"
+echo -e "\033[1;34m[5/8] Starting containers...\033[0m"
 docker compose up -d --wait --quiet-pull --remove-orphans
-echo -e "\r\033[1;32m[5/5] Starting containers... Done\033[0m"
+echo -e "\r\033[1;32m[5/8] Starting containers... Done\033[0m"
 
 # Wait for the server container to be ready
-echo -e "\033[1;34mWaiting for openrelik-server to be ready...\033[0m"
+echo -e "\033[1;34m[6/8] Waiting for openrelik-server to be ready...\033[0m"
 timeout=120
 retry_interval=5
 start_time=$(date +%s)
@@ -145,11 +145,18 @@ while true; do
   echo -e "\033[1;33m  ⏳ Waiting for openrelik-server... ($elapsed_time seconds)\033[0m"
   sleep $retry_interval
 done
-echo -e "\r\033[1;32m[5/5] Waiting for openrelik-server to be ready... Done\033[0m"
+echo -e "\r\033[1;32m[6/8] Waiting for openrelik-server to be ready... Done\033[0m"
+
+# Initialize the database
+echo -e "\033[1;34m[7/8] Initializing database...\033[0m\c"
+docker compose exec openrelik-server bash -c "(cd /app/openrelik/datastores/sql && alembic upgrade head)"
+echo -e "\r\033[1;32m[7/8] Initializing database... Done\033[0m"
 
 # Creating the admin user
+echo -e "\033[1;34m[8/8] Createing admin user...\033[0m\c"
 password=$(LC_ALL=C tr -dc 'A-Za-z0-9@%*+,-./' < /dev/urandom | head -c 16)
-docker compose exec openrelik-server python admin.py create-user admin --password $password --admin
+docker compose exec openrelik-server python admin.py create-user admin --password $password --admin 1>/dev/null
+echo -e "\r\033[1;32m[8/8] Createing admin user... Done\033[0m"
 
 # We are done
 echo -e "\n\033[1;33mInstallation Complete! 🎉\033[0m
