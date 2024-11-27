@@ -154,7 +154,7 @@ echo -e "\r\033[1;32m[7/8] Initializing database... Done\033[0m"
 
 # Creating the admin user
 echo -e "\033[1;34m[8/8] Createing admin user...\033[0m\c"
-password=$(LC_ALL=C tr -dc 'A-Za-z0-9@%*+,-./' < /dev/urandom | head -c 16)
+password=$(LC_ALL=C tr -dc 'A-Za-z0-9@%*+,-./' < /dev/urandom 2>/dev/null | head -c 16)
 docker compose exec openrelik-server python admin.py create-user admin --password $password --admin 1>/dev/null
 echo -e "\r\033[1;32m[8/8] Createing admin user... Done\033[0m"
 
