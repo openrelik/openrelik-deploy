@@ -116,9 +116,8 @@ mv settings.toml ./config/
 mkdir ./config/prometheus
 mv prometheus.yml ./config/prometheus
 
-# Create prometheus data directory and set the correct permissions/ownership.
+# Create prometheus data directory.
 mkdir -p ./data/prometheus
-sudo chown -R 65534:65534 ./data/prometheus
 
 # Replace placeholder values in config.env (for docker compose)
 replace_in_file "<REPLACE_WITH_POSTGRES_USER>" "${POSTGRES_USER}" "config.env"
