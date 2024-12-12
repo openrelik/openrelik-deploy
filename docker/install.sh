@@ -95,6 +95,7 @@ cd ./openrelik
 echo -e "\033[1;34m[3/8] Downloading configuration files...\033[0m\c"
 curl -s ${BASE_DEPLOY_URL}/config.env > config.env
 curl -s ${BASE_DEPLOY_URL}/docker-compose.yml > docker-compose.yml
+curl -s ${BASE_DEPLOY_URL}/prometheus.yml > prometheus.yml
 curl -s ${BASE_SERVER_URL}/settings_example.toml > settings.toml
 echo -e "\r\033[1;32m[3/8] Downloading configuration files... Done\033[0m"
 
@@ -110,6 +111,14 @@ replace_in_file "<REPLACE_WITH_RANDOM_JWT_STRING>" "${RANDOM_JWT_STRING}" "setti
 
 # Move settings to the mapped folder.
 mv settings.toml ./config/
+
+# Move metrics config (prometheus.yml) to the mapped folder.
+mkdir ./config/prometheus
+mv prometheus.yml ./config/prometheus
+
+# Create prometheus data directory and set the correct permissions/ownership.
+mkdir -p ./data/prometheus
+sudo chown -R 65534:65534 ./data/prometheus
 
 # Replace placeholder values in config.env (for docker compose)
 replace_in_file "<REPLACE_WITH_POSTGRES_USER>" "${POSTGRES_USER}" "config.env"

@@ -28,7 +28,6 @@ services:
 
   # The mediator server is responsible for orchestrating updates between task workers and the backend datastore.
   # It uses the mediator/monitor.py script to monitor Celery tasks and update the database accordingly.
-  # It connects to the PostgreSQL database and Redis queue using environment variables.
   openrelik-mediator:
     container_name: openrelik-mediator
     image: ghcr.io/openrelik/openrelik-mediator:${OPENRELIK_MEDIATOR_VERSION}
@@ -42,6 +41,16 @@ services:
       - ./data:/usr/share/openrelik/data
       - ./config:/etc/openrelik
     command: "python mediator.py"
+
+  # The metrics server exports prometheus metrics for the task queue. It uses Celery
+  # to automatically save task related metrics.
+  openrelik-metrics:
+      container_name: openrelik-metrics
+      image: ghcr.io/openrelik/openrelik-metrics:${OPENRELIK_METRICS_VERSION}
+      restart: always
+      environment:
+        - REDIS_URL=redis://openrelik-redis:6379
+      command: "python exporter.py"
 
   # PostgreSQL database for storing application data.
   openrelik-postgres:
@@ -61,6 +70,17 @@ services:
     image: redis:7
     restart: always
     command: "redis-server"
+
+  # Prometheus for metrics.
+  openrelik-prometheus:
+    container_name: openrelik-prometheus
+    image: prom/prometheus:v3.0.1
+    restart: always
+    volumes:
+      - ./config/prometheus:/etc/prometheus
+      - ./data/prometheus:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml
+
 
   # -- Worker containers -----------------------------------------------------------------------
   openrelik-worker-strings:
