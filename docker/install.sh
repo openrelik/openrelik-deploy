@@ -40,6 +40,13 @@ if ! command -v docker &> /dev/null; then
   exit 1
 fi
 
+# Check if Docker Compose is installed
+if ! command -v docker compose &> /dev/null; then
+  echo -e "\033[1;31m ⚠️  Error: Docker Compose v2 is not installed. Please install Docker Compose v2 before running this script.\033[0m"
+  echo -e "     Follow \033[1mhttps://docs.docker.com/compose/install/\033[0m to install Docker Compose for your platform.\n"
+  exit 1
+fi
+
 # Check if any Docker containers with "openrelik" in their name are running
 running_containers=$(docker ps --format "{{.Names}}")
 if grep -q "openrelik" <<< "$running_containers"; then
