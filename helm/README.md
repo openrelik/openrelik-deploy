@@ -24,14 +24,14 @@ minikube start
 minikube tunnel &
 
 # Create the configuration files
-cd chart
+cd helm
 ./config.sh local
 
 # Change back to the REPO directory
 cd $REPO
 
 # Install the OpenRelik Helm chart
-helm install openrelik-on-k8s ./chart -f ./chart/values.yaml
+helm install openrelik-on-k8s ./helm -f ./helm/values.yaml
 ```
 
 > **Note**: For a more real life scenario see [Installing on Cloud](#2-installing-openrelik-on-cloud) for deploying OpenRelik on [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine) (GKE).
@@ -63,7 +63,7 @@ minikube tunnel &
 
 ```console
 # Create the configuration files
-cd chart
+cd helm 
 ./config.sh local
 
 # Change back to the REPO directory
@@ -76,7 +76,7 @@ To install the chart, specify any release name of your choice. For example, usin
 
 ```console
 # Install the OpenRelik Helm chart
-helm install openrelik-on-k8s ./chart -f ./chart/values.yaml
+helm install openrelik-on-k8s ./helm -f ./helm/values.yaml
 
 # Verify that all the OpenRelik component pods are in 'Running' state (this might take a moment)
 kubectl get pods -n openrelik
@@ -184,7 +184,7 @@ gcloud container clusters get-credentials $GKE_CLUSTER_NAME --zone $GKE_CLUSTER_
 #### 2.2.2. Set the default values for the OpenRelik Helm chart
 
 ```console
-cd $REPO/chart
+cd $REPO/helm
 ./config.sh cloud
 
 # Change back to the REPO directory
@@ -196,11 +196,11 @@ cd $REPO
 > **Tip**: For more details see [Filestore Multishares](https://cloud.google.com/filestore/docs/optimize-multishares)
 
 ```console
-kubectl apply -f chart/templates/namespace/ns-openrelik.yaml
+kubectl apply -f helm/templates/namespace/ns-openrelik.yaml
 
-kubectl apply -f chart/filestore/sc-ms-512.yaml
+kubectl apply -f helm/filestore/sc-ms-512.yaml
 
-kubectl apply -f chart/filestore/pvc-filestore.yaml
+kubectl apply -f helm/filestore/pvc-filestore.yaml
 
 # Make sure you let the Filestore creation process finish before continuing.
 watch -n 1 kubectl get pvc -n openrelik
@@ -213,7 +213,7 @@ watch -n 1 kubectl get pvc -n openrelik
 #### 2.2.4. Install the Helm chart
 
 ```console
-helm install openrelik-on-k8s ./chart -f ./chart/values-gcp.yaml
+helm install openrelik-on-k8s ./helm -f ./helm/values-gcp.yaml
 ```
 
 #### 2.2.5. Wait for all OpenRelik pods to be in 'Running' status
