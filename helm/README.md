@@ -254,7 +254,29 @@ kubectl exec -it ${SERVER_POD} -n openrelik -c openrelik-server -- \
 
 ## 3. Connect to the UI
 
-Run the command below and then point your browser to the displayed URL:
+It will take a bit of time to provision the certificate to the load balancer that serves the OpenRelik UI.
+
+You can check on the status by running the following command:
+
+> **Note**: You can continue with the next step when the output indicates that the certificate is provisioned with ```status: ACTIVE```
+
+```console
+watch -n 1 gcloud compute ssl-certificates describe ${CERTIFICATE_NAME}
+
+# ...
+# kind: compute#sslCertificate
+# managed:
+#   status: ACTIVE
+#   domainStatus:
+#     34-98-78-82.nip.io: ACTIVE
+#     openrelik.34-98-78-82.nip.io: ACTIVE
+#   domains:
+#   - 34-98-78-82.nip.io
+#   - openrelik.34-98-78-82.nip.io
+# ...
+```
+
+Once the certificate is provisisoned you can run the command below and then point your browser to the displayed URL:
 
 ```console
 echo "https://$OPENRELIK_HOSTNAME"
