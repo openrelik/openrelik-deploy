@@ -263,6 +263,7 @@ You can check on the status by running the following command:
 ```console
 watch -n 1 gcloud compute ssl-certificates describe ${CERTIFICATE_NAME}
 
+# The output should look similar to the below:
 # ...
 # kind: compute#sslCertificate
 # managed:
