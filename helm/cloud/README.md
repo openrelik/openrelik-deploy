@@ -98,7 +98,7 @@ export ENABLE_GCP=true
 
 ## 3. Installing OpenRelik on GKE
 
-You can continue with the instructions for [installing OpenRelik on GKE](../helm/README.md#22-installing-openrelik-on-gke).
+You can continue with the instructions for [installing OpenRelik on GKE](../README.md#22-installing-openrelik-on-gke).
 
 ## 4. Cleaning up
 

@@ -10,7 +10,7 @@ Before we get started make sure you clone the repo onto your machine.
 
 ```console
 git clone https://github.com/openrelik/openrelik-deploy.git
-cd openrelik-deploy
+cd openrelik-deploy/helm
 export REPO=$(pwd)
 ```
 
@@ -24,14 +24,14 @@ minikube start
 minikube tunnel &
 
 # Create the configuration files
-cd helm
+cd chart
 ./config.sh local
 
 # Change back to the REPO directory
 cd $REPO
 
 # Install the OpenRelik Helm chart
-helm install openrelik-on-k8s ./helm -f ./helm/values.yaml
+helm install openrelik-on-k8s ./chart -f ./chart/values.yaml
 ```
 
 > **Note**: For a more real life scenario see [Installing on Cloud](#2-installing-openrelik-on-cloud) for deploying OpenRelik on [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine) (GKE).
@@ -63,7 +63,7 @@ minikube tunnel &
 
 ```console
 # Create the configuration files
-cd helm 
+cd chart
 ./config.sh local
 
 # Change back to the REPO directory
@@ -76,7 +76,7 @@ To install the chart, specify any release name of your choice. For example, usin
 
 ```console
 # Install the OpenRelik Helm chart
-helm install openrelik-on-k8s ./helm -f ./helm/values.yaml
+helm install openrelik-on-k8s ./chart -f ./chart/values.yaml
 
 # Verify that all the OpenRelik component pods are in 'Running' state (this might take a moment)
 kubectl get pods -n openrelik
@@ -138,13 +138,13 @@ For this you could consider installing OpenRelik on a managed Kubernetes cluster
 ### 2.1. GKE Installation
 
 Before we can install OpenRelik we need to provision a GKE cluster and its related infrastructure.
-The quickest way to provision a ready to run environment on Google Cloud is by following the steps in these [installation instructions](../cloud/README.md).
+The quickest way to provision a ready to run environment on Google Cloud is by following the steps in these [installation instructions](./cloud/README.md).
 
 We recommend that you start with cloning this repo again to avoid carrying over any configurations from the minikube based instructions above.
 
 ```console
 git clone https://github.com/google/openrelik-deploy.git
-cd openrelik-deploy
+cd openrelik-deploy/helm
 export REPO=$(pwd)
 ```
 
@@ -153,7 +153,7 @@ Once you have provisioned your infrastructure you can continue with the instruct
 ### 2.2. Installing OpenRelik on GKE
 
 In case you followed the Google Cloud environment installation instructions you should already have the following environment variables configured.
-Otherwise, either run the [installation instruction step](../cloud/README.md#22-capture-environment-variables-for-later-use) again or set the environment variables to values that match your setup.
+Otherwise, either run the [installation instruction step](./cloud/README.md#22-capture-environment-variables-for-later-use) again or set the environment variables to values that match your setup.
 You can check that they have a value assigned by running the commands below.
 
 ```console
@@ -184,7 +184,7 @@ gcloud container clusters get-credentials $GKE_CLUSTER_NAME --zone $GKE_CLUSTER_
 #### 2.2.2. Set the default values for the OpenRelik Helm chart
 
 ```console
-cd $REPO/helm
+cd $REPO/chart
 ./config.sh cloud
 
 # Change back to the REPO directory
@@ -196,11 +196,11 @@ cd $REPO
 > **Tip**: For more details see [Filestore Multishares](https://cloud.google.com/filestore/docs/optimize-multishares)
 
 ```console
-kubectl apply -f helm/templates/namespace/ns-openrelik.yaml
+kubectl apply -f chart/templates/namespace/ns-openrelik.yaml
 
-kubectl apply -f helm/filestore/sc-ms-512.yaml
+kubectl apply -f chart/filestore/sc-ms-512.yaml
 
-kubectl apply -f helm/filestore/pvc-filestore.yaml
+kubectl apply -f chart/filestore/pvc-filestore.yaml
 
 # Make sure you let the Filestore creation process finish before continuing.
 watch -n 1 kubectl get pvc -n openrelik
@@ -213,7 +213,7 @@ watch -n 1 kubectl get pvc -n openrelik
 #### 2.2.4. Install the Helm chart
 
 ```console
-helm install openrelik-on-k8s ./helm -f ./helm/values-gcp.yaml
+helm install openrelik-on-k8s ./chart -f ./chart/values-gcp.yaml
 ```
 
 #### 2.2.5. Wait for all OpenRelik pods to be in 'Running' status
