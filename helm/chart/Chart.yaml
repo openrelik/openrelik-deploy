@@ -1,0 +1,21 @@
+apiVersion: v2
+name: openrelik
+version: 1.0.0
+description: A Helm chart for Openrelik Kubernetes deployments.
+keywords:
+- openrelik
+- dfir
+- analysis
+- forensics
+home: "https://openrelik.org/"
+maintainers:
+  - name: Open Source DFIR
+    url: https://github.com/openrelik/openrelik-deploy
+sources:
+- https://github.com/openrelik
+- https://github.com/google/osdfir-infrastructure
+icon: https://openrelik.org/favicon.ico
+appVersion: "latest"
+annotations:
+  category: Security
+  licenses: Apache-2.0

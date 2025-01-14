@@ -1,0 +1,28 @@
+{{- if .Values.redis.selfManaged }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openrelik-redis
+  namespace: openrelik
+  labels:
+    app: openrelik-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openrelik-redis
+  template:
+    metadata:
+      labels:
+        app: openrelik-redis
+    spec:
+      containers:
+        - name: openrelik-redis
+          args:
+            - redis-server
+          image: {{ .Values.redis.image }}
+          ports:
+          - containerPort: 6379
+            protocol: TCP
+      restartPolicy: Always
+{{- end }}

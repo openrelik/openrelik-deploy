@@ -1,0 +1,39 @@
+{{- if .Values.postgres.selfManaged }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openrelik-postgres
+  namespace: openrelik
+  labels:
+    app: openrelik-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openrelik-postgres
+  template:
+    metadata:
+      labels:
+        app: openrelik-postgres
+    spec:
+      containers:
+        - name: openrelik-postgres
+          image: {{ .Values.postgres.image }}
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.db }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.password }}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: vol-postgres
+      restartPolicy: Always
+      volumes:
+        - name: vol-postgres
+          persistentVolumeClaim:
+            claimName: pvc-postgres
+{{- end }}

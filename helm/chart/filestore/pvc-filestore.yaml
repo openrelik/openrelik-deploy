@@ -1,0 +1,12 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-filestore
+  namespace: openrelik
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: sc-ms-512
+  resources:
+    requests:
+      storage: 512Gi

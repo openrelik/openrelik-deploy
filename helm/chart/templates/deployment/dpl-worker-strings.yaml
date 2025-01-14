@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openrelik-worker-strings
+  namespace: openrelik
+  labels:
+    worker: strings
+spec:
+  replicas: {{ .Values.openrelik.worker.plaso.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      worker: strings
+  template:
+    metadata:
+      labels:
+        worker: strings
+    spec:
+      initContainers:
+        - name: create-dirs
+          image: busybox:1.37
+          command: ['sh', '-c', "mkdir -p /usr/share/openrelik/data/artifacts; mkdir -p /usr/share/openrelik/config"]
+          volumeMounts:
+          - name: vol-data
+            mountPath: /usr/share/openrelik
+      containers:
+      - name: openrelik-worker-strings
+        image: {{ .Values.openrelik.worker.strings.image }}
+        {{- if .Values.global.useResourceRequests }}
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+        {{- end }}
+        args:
+          - celery
+          - --app=src.app
+          - worker
+          - --task-events
+          - --concurrency=4
+          - --loglevel=INFO
+          - -Q
+          - openrelik-worker-strings
+        env:
+        - name: OPENRELIK_PYDEBUG
+          value: "0"
+        - name: OPENRELIK_PYDEBUG_PORT
+          value: "5678"
+        - name: REDIS_URL
+          value: {{ .Values.redis.url }}
+        volumeMounts:
+        - name: vol-data
+          mountPath: /usr/share/openrelik
+      restartPolicy: Always
+      volumes:
+      {{- if .Values.global.localData }}
+      - name: vol-data
+        persistentVolumeClaim:
+          claimName: pvc-local
+      {{- end }}
+      {{- if .Values.filestore.managed }}
+      - name: vol-data
+        persistentVolumeClaim:
+          claimName: pvc-filestore
+      {{- end }}

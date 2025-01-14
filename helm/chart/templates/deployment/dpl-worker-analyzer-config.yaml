@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openrelik-worker-analyzer-config
+  namespace: openrelik
+  labels:
+    worker: analyzer-config
+spec:
+  replicas: {{ .Values.openrelik.worker.analyzer.replicas }}
+  selector:
+    matchLabels:
+      worker: analyzer-config
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        worker: analyzer-config
+    spec:
+      initContainers:
+        - name: create-dirs
+          image: busybox:1.37
+          command: ['sh', '-c', "mkdir -p /usr/share/openrelik/data/artifacts; mkdir -p /usr/share/openrelik/config"]
+          volumeMounts:
+          - name: vol-data
+            mountPath: /usr/share/openrelik
+      containers:
+        - name: openrelik-worker-analyzer-config
+          image: {{ .Values.openrelik.worker.analyzer.image }}
+          {{- if .Values.global.useResourceRequests }}
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1000m"
+          {{- end }}
+          args:
+            - celery
+            - --app=src.app
+            - worker
+            - --task-events
+            - --concurrency=4
+            - --loglevel=INFO
+            - -Q
+            - openrelik-worker-analyzer-config
+          env:
+            - name: REDIS_URL
+              value: {{ .Values.redis.url }}
+          volumeMounts:
+          - name: vol-data
+            mountPath: /usr/share/openrelik
+      restartPolicy: Always
+      volumes:
+        {{- if .Values.global.localData }}
+        - name: vol-data
+          persistentVolumeClaim:
+            claimName: pvc-local
+        {{- end }}
+        {{- if .Values.filestore.managed }}
+        - name: vol-data
+          persistentVolumeClaim:
+            claimName: pvc-filestore
+        {{- end }}
