@@ -169,9 +169,20 @@ echo -e "\r\033[1;32m[7/8] Initializing database... Done\033[0m"
 
 # Creating the admin user
 echo -e "\033[1;34m[8/8] Creating admin user...\033[0m\c"
-password=$(LC_ALL=C tr -dc 'A-Za-z0-9@%*+,-./' < /dev/urandom 2>/dev/null | head -c 16)
-docker compose exec openrelik-server python admin.py create-user admin --password $password --admin 1>/dev/null
-echo -e "\r\033[1;32m[8/8] Createing admin user... Done\033[0m"
+
+# Check if OPENRELIK_ADMIN_PASSWORD is set
+if [ -z "${OPENRELIK_ADMIN_PASSWORD}" ]; then
+  # Not set, generate a random password
+  password=$(LC_ALL=C tr -dc 'A-Za-z0-9@%*+,-./' < /dev/urandom 2>/dev/null | head -c 16)
+else
+  # Use the provided environment variable
+  password="${OPENRELIK_ADMIN_PASSWORD}"
+fi
+
+docker compose exec openrelik-server \
+  python admin.py create-user admin --password "$password" --admin 1>/dev/null
+
+echo -e "\r\033[1;32m[8/8] Creating admin user... Done\033[0m"
 
 # We are done
 echo -e "\n\033[1;33mInstallation Complete! 🎉\033[0m
