@@ -78,8 +78,8 @@ services:
     image: prom/prometheus:v3.0.1
     restart: always
     volumes:
-      - ./config/prometheus:/etc/prometheus
-      - ./data/prometheus:/prometheus
+      - prometheus-config:/etc/prometheus
+      - prometheus-data:/prometheus
     command: --config.file=/etc/prometheus/prometheus.yml
 
 
@@ -139,6 +139,17 @@ services:
         - ./data:/usr/share/openrelik/data
       command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-analyzer-config"
 
+volumes:
+  prometheus-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/prometheus
+  prometheus-config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./config/prometheus
 
-  # Timesketch worker - This worker needs access to an existing Timesketch server.
-  # See https://github.com/openrelik/openrelik-worker-timesketch for installation instructions.
