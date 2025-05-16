@@ -103,6 +103,7 @@ echo -e "\033[1;34m[3/8] Downloading configuration files...\033[0m\c"
 curl -s ${BASE_DEPLOY_URL}/config.env > config.env
 curl -s ${BASE_DEPLOY_URL}/docker-compose.yml > docker-compose.yml
 curl -s ${BASE_DEPLOY_URL}/prometheus.yml > prometheus.yml
+curl -s ${BASE_DEPLOY_URL}/jaeger.yml > jaeger.yml
 curl -s ${BASE_SERVER_URL}/settings_example.toml > settings.toml
 echo -e "\r\033[1;32m[3/8] Downloading configuration files... Done\033[0m"
 
@@ -125,6 +126,12 @@ mv prometheus.yml ./config/prometheus
 
 # Create prometheus data directory.
 mkdir -p ./data/prometheus
+
+# Move Jaeger configuration file to the mapped folder
+mv jaeger.yml ./config/
+
+# Create Opensearch data directory (for Jaeger traces storage).
+mkdir -p ./data/opensearch
 
 # Replace placeholder values in config.env (for docker compose)
 replace_in_file "<REPLACE_WITH_POSTGRES_USER>" "${POSTGRES_USER}" "config.env"
