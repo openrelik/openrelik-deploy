@@ -164,11 +164,6 @@ services:
       image: opensearchproject/opensearch:2.15.0
       ports:
         - "127.0.0.1:9200:9200"
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://127.0.0.1:9200"]
-        interval: 2s
-        timeout: 60s
-        retries: 20
       environment:
         - discovery.type=single-node
         - "plugins.security.disabled=true"
