@@ -147,9 +147,6 @@ services:
       container_name: jaeger
       image: jaegertracing/jaeger:2.3.0
       restart: always
-      depends_on:
-        opensearch-jaeger-storage:
-          condition: service_healthy
       ports:
         - "127.0.0.1:16686:16686"
         - "127.0.0.1:4317:4317"
