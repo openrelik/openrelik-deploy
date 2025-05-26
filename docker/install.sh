@@ -132,6 +132,7 @@ mv jaeger.yml ./config/
 
 # Create Opensearch data directory (for Jaeger traces storage).
 mkdir -p ./data/opensearch
+chown 1000:1000 ./data/opensearch
 
 # Replace placeholder values in config.env (for docker compose)
 replace_in_file "<REPLACE_WITH_POSTGRES_USER>" "${POSTGRES_USER}" "config.env"
