@@ -159,3 +159,6 @@ volumes:
       o: bind
       device: ./config/prometheus
 
+networks:
+  default:
+    name: openrelik_default
