@@ -9,6 +9,10 @@ services:
       - REDIS_URL=redis://openrelik-redis:6379
       - OPENRELIK_SERVER_SETTINGS=/etc/openrelik/settings.toml
       - PROMETHEUS_SERVER_URL=http://openrelik-prometheus:9090
+      - OTEL_MODE=otlp-grpc
+      - OTEL_SERVICE_NAME=openrelik-server
+      - OTLP_GRPC_ENDPOINT=jaeger:4317
+      - OTLP_HTTP_ENDPOINT=http://jaeger:4318/v1/traces
     volumes:
       - ./data:/usr/share/openrelik/data
       - ./config:/etc/openrelik/
@@ -144,6 +148,35 @@ services:
       volumes:
         - ./data:/usr/share/openrelik/data
       command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-analyzer-config"
+
+  jaeger-server:
+      container_name: jaeger
+      image: jaegertracing/jaeger:2.3.0
+      restart: always
+      ports:
+        - "127.0.0.1:16686:16686"
+        - "127.0.0.1:4317:4317"
+        - "127.0.0.1:4318:4318"
+        - "127.0.0.1:5778:5778"
+        - "127.0.0.1:9411:9411"
+      volumes:
+        - ./config/jaeger.yml:/jaeger/config.yaml
+      command:
+        - "--config"
+        - "/jaeger/config.yaml"
+
+  opensearch-jaeger-storage:
+      container_name: opensearch-jaeger-storage
+      image: opensearchproject/opensearch:2.15.0
+      ports:
+        - "127.0.0.1:9200:9200"
+      environment:
+        - discovery.type=single-node
+        - "plugins.security.disabled=true"
+        - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      volumes:
+        - ./data/opensearch:/usr/share/opensearch/data/
+
 
 volumes:
   prometheus-data:
