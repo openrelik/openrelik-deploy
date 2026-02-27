@@ -1,0 +1,145 @@
+services:
+  # -- Core services -----------------------------------------------------------------------
+  openrelik-server:
+    container_name: openrelik-server
+    image: ghcr.io/openrelik/openrelik-server:${OPENRELIK_SERVER_VERSION}
+    restart: always
+    environment:
+      - SQLALCHEMY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@openrelik-postgres/${POSTGRES_DB}
+      - REDIS_URL=redis://openrelik-redis:6379
+      - OPENRELIK_SERVER_SETTINGS=/etc/openrelik/settings.toml
+      - PROMETHEUS_SERVER_URL=http://openrelik-prometheus:9090
+    volumes:
+      - ./data:/usr/share/openrelik/data
+      - ./config:/etc/openrelik/
+    ports:
+      - 127.0.0.1:8710:8710
+    command: uvicorn main:app --proxy-headers --forwarded-allow-ips '*' --workers 1 --host 0.0.0.0 --port 8710
+
+  openrelik-ui:
+    container_name: openrelik-ui
+    image: ghcr.io/openrelik/openrelik-ui:${OPENRELIK_UI_VERSION}
+    restart: always
+    environment:
+      - OPENRELIK_SERVER_URL=${OPENRELIK_SERVER_URL}
+      - OPENRELIK_API_VERSION=${OPENRELIK_API_VERSION}
+      - OPENRELIK_AUTH_METHODS=local  # Comma separated string of auth methods (e.g. local,google)
+    ports:
+      - 127.0.0.1:8711:8711
+
+  # The mediator server is responsible for orchestrating updates between task workers and the backend datastore.
+  # It uses the mediator/monitor.py script to monitor Celery tasks and update the database accordingly.
+  openrelik-mediator:
+    container_name: openrelik-mediator
+    image: ghcr.io/openrelik/openrelik-mediator:${OPENRELIK_MEDIATOR_VERSION}
+    restart: always
+    environment:
+      - SQLALCHEMY_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@openrelik-postgres/${POSTGRES_DB}
+      - REDIS_URL=redis://openrelik-redis:6379
+      - PYTHONUNBUFFERED=1
+      - OPENRELIK_SERVER_SETTINGS=/etc/openrelik/settings.toml
+    volumes:
+      - ./data:/usr/share/openrelik/data
+      - ./config:/etc/openrelik
+    command: "python mediator.py"
+
+  # The metrics server exports prometheus metrics for the task queue. It uses Celery
+  # to automatically save task related metrics.
+  openrelik-metrics:
+      container_name: openrelik-metrics
+      image: ghcr.io/openrelik/openrelik-metrics:${OPENRELIK_METRICS_VERSION}
+      restart: always
+      environment:
+        - REDIS_URL=redis://openrelik-redis:6379
+      command: "python exporter.py"
+
+  # PostgreSQL database for storing application data.
+  openrelik-postgres:
+    container_name: openrelik-postgres
+    image: postgres:18
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    restart: always
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+
+  # Redis queue for task management.
+  openrelik-redis:
+    container_name: openrelik-redis
+    image: redis:8
+    restart: always
+    command: "redis-server"
+
+  # Prometheus for metrics.
+  openrelik-prometheus:
+    container_name: openrelik-prometheus
+    image: prom/prometheus:v3
+    restart: always
+    volumes:
+      - prometheus-config:/etc/prometheus
+      - prometheus-data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml
+
+
+  # -- Workers -----------------------------------------------------------------------
+  openrelik-worker-strings:
+    container_name: openrelik-worker-strings
+    image: ghcr.io/openrelik/openrelik-worker-strings:${OPENRELIK_WORKER_STRINGS_VERSION}
+    restart: always
+    environment:
+      - REDIS_URL=redis://openrelik-redis:6379
+    volumes:
+      - ./data:/usr/share/openrelik/data
+    command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-strings"
+
+  openrelik-worker-grep:
+    container_name: openrelik-worker-grep
+    image: ghcr.io/openrelik/openrelik-worker-grep:${OPENRELIK_WORKER_GREP_VERSION}
+    restart: always
+    environment:
+      - REDIS_URL=redis://openrelik-redis:6379
+    volumes:
+      - ./data:/usr/share/openrelik/data
+    command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-grep"
+
+  openrelik-worker-plaso:
+    container_name: openrelik-worker-plaso
+    image: ghcr.io/openrelik/openrelik-worker-plaso:${OPENRELIK_WORKER_PLASO_VERSION}
+    restart: always
+    environment:
+      - REDIS_URL=redis://openrelik-redis:6379
+    volumes:
+      - ./data:/usr/share/openrelik/data
+    command: "celery --app=src.app worker --task-events --concurrency=2 --loglevel=INFO -Q openrelik-worker-plaso"
+
+  openrelik-worker-extraction:
+      container_name: openrelik-worker-extraction
+      image: ghcr.io/openrelik/openrelik-worker-extraction:${OPENRELIK_WORKER_EXTRACTION_VERSION}
+      restart: always
+      environment:
+        - REDIS_URL=redis://openrelik-redis:6379
+      volumes:
+        - ./data:/usr/share/openrelik/data
+      command: "celery --app=src.app worker --task-events --concurrency=2 --loglevel=INFO -Q openrelik-worker-extraction"
+
+# -- Volumes -----------------------------------------------------------------------
+volumes:
+  prometheus-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/prometheus
+  prometheus-config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./config/prometheus
+
+# -- Networks -----------------------------------------------------------------------
+networks:
+  default:
+    name: openrelik_default

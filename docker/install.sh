@@ -23,27 +23,61 @@ echo -e "\033[38;5;87m   ████  ██     ██████ ██  █
 echo ""
 
 # Version configuration
+RELEASES=("0.7.0-rc.1" "0.6.0")
 LATEST_RELEASE="0.6.0"
 
 # Prompt user to select version
 echo -e "\033[1;34m  Select a version to install:\033[0m"
-echo -e "    \033[1;37m1)\033[0m Latest release (${LATEST_RELEASE})"
+echo -e "    \033[1;37m1)\033[0m Latest release (${LATEST_RELEASE}) (recommended)"
 echo -e "    \033[1;37m2)\033[0m Bleeding edge (latest)"
+
+# Add other releases from the array to the prompt
+OTHER_RELEASES=()
+for release in "${RELEASES[@]}"; do
+  if [[ "$release" != "$LATEST_RELEASE" ]]; then
+    OTHER_RELEASES+=("$release")
+  fi
+done
+
+for i in "${!OTHER_RELEASES[@]}"; do
+  echo -e "    \033[1;37m$((i+3)))\033[0m Release ${OTHER_RELEASES[$i]}"
+done
+
 echo ""
-read -rp "  Enter your choice [1-2] (default: 1): " version_choice
+read -rp "  Enter your choice [1-$(( ${#OTHER_RELEASES[@]} + 2 ))] (default: 1): " version_choice
 
 case "${version_choice}" in
   2)
     OPENRELIK_SERVER_VERSION="latest"
     CONFIG_ENV_FILE="config_latest.env"
+    COMPOSE_FILE="docker-compose_latest.yml"
     SERVER_REF="main"
     echo -e "  \033[1;32m→ Installing bleeding edge version\033[0m\n"
     ;;
-  *)
+  1|"")
     OPENRELIK_SERVER_VERSION="${LATEST_RELEASE}"
     CONFIG_ENV_FILE="config_${LATEST_RELEASE}.env"
+    COMPOSE_FILE="docker-compose_${LATEST_RELEASE}.yml"
     SERVER_REF="refs/tags/${LATEST_RELEASE}"
     echo -e "  \033[1;32m→ Installing release ${LATEST_RELEASE}\033[0m\n"
+    ;;
+  *)
+    idx=$((version_choice - 3))
+    if [[ "$version_choice" =~ ^[0-9]+$ ]] && [[ $idx -ge 0 && $idx -lt ${#OTHER_RELEASES[@]} ]]; then
+      SELECTED_RELEASE="${OTHER_RELEASES[$idx]}"
+      OPENRELIK_SERVER_VERSION="${SELECTED_RELEASE}"
+      CONFIG_ENV_FILE="config_${SELECTED_RELEASE}.env"
+      COMPOSE_FILE="docker-compose_${SELECTED_RELEASE}.yml"
+      SERVER_REF="refs/tags/${SELECTED_RELEASE}"
+      echo -e "  \033[1;32m→ Installing release ${SELECTED_RELEASE}\033[0m\n"
+    else
+      # Default to latest release for any other input
+      OPENRELIK_SERVER_VERSION="${LATEST_RELEASE}"
+      CONFIG_ENV_FILE="config_${LATEST_RELEASE}.env"
+      COMPOSE_FILE="docker-compose_${LATEST_RELEASE}.yml"
+      SERVER_REF="refs/tags/${LATEST_RELEASE}"
+      echo -e "  \033[1;32m→ Installing release ${LATEST_RELEASE}\033[0m\n"
+    fi
     ;;
 esac
 
@@ -121,7 +155,7 @@ cd ./openrelik
 # Fetch installation files
 echo -e "\033[1;34m[3/8] Downloading configuration files...\033[0m\c"
 curl -s ${BASE_DEPLOY_URL}/${CONFIG_ENV_FILE} > config.env
-curl -s ${BASE_DEPLOY_URL}/docker-compose.yml > docker-compose.yml
+curl -s ${BASE_DEPLOY_URL}/${COMPOSE_FILE} > docker-compose.yml
 curl -s ${BASE_DEPLOY_URL}/prometheus.yml > prometheus.yml
 curl -s ${BASE_SERVER_URL}/settings_example.toml > settings.toml
 echo -e "\r\033[1;32m[3/8] Downloading configuration files... Done\033[0m"
