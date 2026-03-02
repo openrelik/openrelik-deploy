@@ -10,8 +10,9 @@ services:
       - OPENRELIK_SERVER_SETTINGS=/etc/openrelik/settings.toml
       - PROMETHEUS_SERVER_URL=http://openrelik-prometheus:9090
     volumes:
-      - ./data:/usr/share/openrelik/data
-      - ./config:/etc/openrelik/
+      # Indicate shared mount for SELinux; :z is ignored on platforms without SELinux.
+      - ./data:/usr/share/openrelik/data:z
+      - ./config:/etc/openrelik/:z
     ports:
       - 127.0.0.1:8710:8710
     command: uvicorn main:app --proxy-headers --forwarded-allow-ips '*' --workers 1 --host 0.0.0.0 --port 8710
@@ -39,8 +40,9 @@ services:
       - PYTHONUNBUFFERED=1
       - OPENRELIK_SERVER_SETTINGS=/etc/openrelik/settings.toml
     volumes:
-      - ./data:/usr/share/openrelik/data
-      - ./config:/etc/openrelik
+      # Indicate shared mount for SELinux; :z is ignored on platforms without SELinux.
+      - ./data:/usr/share/openrelik/data:z
+      - ./config:/etc/openrelik:z
     command: "python mediator.py"
 
   # The metrics server exports prometheus metrics for the task queue. It uses Celery
@@ -63,7 +65,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     restart: always
     volumes:
-      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+      # Indicate shared mount for SELinux; :z is ignored on platforms without SELinux.
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data:z
 
   # Redis queue for task management.
   openrelik-redis:
@@ -91,7 +94,8 @@ services:
     environment:
       - REDIS_URL=redis://openrelik-redis:6379
     volumes:
-      - ./data:/usr/share/openrelik/data
+      # Indicate shared mount for SELinux; :z is ignored on platforms without SELinux.
+      - ./data:/usr/share/openrelik/data:z
     command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-strings"
 
   openrelik-worker-grep:
@@ -101,7 +105,8 @@ services:
     environment:
       - REDIS_URL=redis://openrelik-redis:6379
     volumes:
-      - ./data:/usr/share/openrelik/data
+      # Indicate shared mount for SELinux; :z is ignored on platforms without SELinux.
+      - ./data:/usr/share/openrelik/data:z
     command: "celery --app=src.app worker --task-events --concurrency=4 --loglevel=INFO -Q openrelik-worker-grep"
 
   openrelik-worker-plaso:
@@ -111,7 +116,8 @@ services:
     environment:
       - REDIS_URL=redis://openrelik-redis:6379
     volumes:
-      - ./data:/usr/share/openrelik/data
+      # Indicate shared mount for SELinux; :z is ignored on platforms without SELinux.
+      - ./data:/usr/share/openrelik/data:z
     command: "celery --app=src.app worker --task-events --concurrency=2 --loglevel=INFO -Q openrelik-worker-plaso"
 
   openrelik-worker-extraction:
@@ -121,11 +127,13 @@ services:
       environment:
         - REDIS_URL=redis://openrelik-redis:6379
       volumes:
-        - ./data:/usr/share/openrelik/data
+        # Indicate shared mount for SELinux; :z is ignored on platforms without SELinux.
+        - ./data:/usr/share/openrelik/data:z
       command: "celery --app=src.app worker --task-events --concurrency=2 --loglevel=INFO -Q openrelik-worker-extraction"
 
 # -- Volumes -----------------------------------------------------------------------
 volumes:
+  # Dedicated volumes are SELinux-labeled automatically; no need for :z here.
   prometheus-data:
     driver: local
     driver_opts:
